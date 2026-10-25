@@ -523,6 +523,7 @@ set(COMMON_TEST_SOURCES
     App/test_ProcessBatchPriorityDialogRender.cpp
     App/test_ProcessAffinityDialog.cpp
     App/test_AboutDialogRender.cpp
+    App/test_AccessNoticeDialogRender.cpp  # Standard or Administrator, headless (#2728)
     App/test_ElevationNoticeDialogRender.cpp
     App/test_HelpContent.cpp
     App/test_HelpWindowRender.cpp
@@ -710,6 +711,7 @@ set(APP_REAL_TEST_SOURCES
     App/test_UiLayersOnDisplay.cpp
     App/test_ScreenshotOnDisplay.cpp  # TASKSMACK_SCREENSHOT and TASKSMACK_DEMO end to end (#2827)
     App/test_UiScenariosOnDisplay.cpp # the #2700 sign-off's steps through the whole shell (#2711)
+    App/test_AccessNoticeOnDisplay.cpp # the startup notice in a real application (#2728)
     App/test_SettingsThemeApply.cpp  # a theme picked in Settings applies on Save, not before (#2713)
 )
 # Linux-only app tests, listed on every platform so the registration check below sees them
@@ -847,6 +849,7 @@ add_executable(TaskSmackTests
     ${CMAKE_SOURCE_DIR}/src/App/AboutLayer.cpp
     ${CMAKE_SOURCE_DIR}/src/App/PlatformOpen.cpp
     # The Limited Data notice (#1547), run headless (test_ElevationNoticeDialogRender.cpp)
+    ${CMAKE_SOURCE_DIR}/src/App/AccessNoticeDialog.cpp
     ${CMAKE_SOURCE_DIR}/src/App/ElevationNoticeDialog.cpp
     # The Help window (#172), run headless (test_HelpWindowRender.cpp)
     ${CMAKE_SOURCE_DIR}/src/App/HelpWindow.cpp
