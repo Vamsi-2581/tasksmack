@@ -265,6 +265,7 @@ A cell reading **-** is a value of 0 (or one that doesn't apply). A cell reading
 | **Ctrl+click** | Processes table: add a row to the selection, or remove it |
 | **Shift+click** / **Ctrl+Shift+click** | Processes table: select the rows from the last one clicked to this one / add them to the selection |
 | **Ctrl+A** (over the process table) | Select every row shown |
+| **/** (over the process table) | Find a process by name: a box opens beside the filter, and the selection jumps to the first row (from the selected one) whose name contains what you type. **Enter** goes to the next match, wrapping round; **Esc** closes the box. Unlike the filter, every row stays in view. "No match" when no row has the name |
 | **Ctrl+F** (over the process table) | Put the cursor in the filter box |
 | **Ctrl+Shift+F** (over the process table) | Find handles: which processes have a file, folder or library open |
 | Hold **Ctrl** (over the process table) | Freeze the process table while held |
