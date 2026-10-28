@@ -18,9 +18,9 @@ colors = [
 text_primary = "#0D1A0D"
 text_disabled = "#5A6B5A"
 text_muted = "#6C6C6C"
-text_error = "#D4002A"
-text_warning = "#805900"
-text_success = "#004217"
+text_error = "#E02036"
+text_warning = "#755000"
+text_success = "#003B11"
 text_info = "#46774A"
 [status]
 running = "#00691A"
