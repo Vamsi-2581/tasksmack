@@ -335,6 +335,7 @@ set(PLATFORM_SOURCES_WINDOWS
     src/Platform/Windows/PDHGPUProbe.cpp
     src/Platform/Windows/PerfProviderApartment.cpp
     src/Platform/Windows/WindowsStartupProbe.cpp
+    src/Platform/Windows/WindowsStartupImpact.cpp # the last sign-in's per-process startup cost, from WDI (#3073)
     src/Platform/Windows/WindowsStartupActions.cpp
     src/Platform/Windows/WindowsServiceActions.cpp
     src/Platform/Windows/WindowsServiceProbe.cpp
@@ -413,6 +414,7 @@ set(TASKSMACK_HEADERS
     src/Platform/IProcessOpenFiles.h
     src/Platform/IProcessSecurity.h
     src/Platform/IStartupProbe.h
+    src/Platform/StartupImpact.h
     src/Platform/IStartupActions.h
     src/Platform/IServiceActions.h
     src/Platform/IServiceProbe.h
@@ -443,6 +445,7 @@ set(TASKSMACK_HEADERS
     src/Domain/GPUSnapshot.h
     src/Domain/GPUModel.h
     src/Domain/StartupModel.h
+    src/Domain/StartupImpact.h
     src/Domain/ServiceModel.h
     src/Domain/SensorModel.h
     src/Domain/SensorTracker.h
@@ -532,6 +535,7 @@ elseif(WIN32)
         src/Platform/Windows/DXGIGPUProbe.h
         src/Platform/Windows/NVMLGPUProbe.h
         src/Platform/Windows/WindowsStartupProbe.h
+        src/Platform/Windows/WindowsStartupImpact.h
         src/Platform/Windows/WindowsStartupActions.h
         src/Platform/Windows/WindowsServiceProbe.h
         src/Platform/Windows/WindowsServiceConfig.h
