@@ -2881,6 +2881,108 @@ TEST_F(ProcessesPanelRenderTest, GroupByContainerShowsHeadersWithTotalsAndCollap
     panel->onDetach(); // TearDown restores the settings
 }
 
+// #3067: the toolbar's Find handles opens its dialog; a query typed there searches every process's open
+// files on the dialog's worker and lists each process holding a match, with the count in the status line.
+TEST_F(ProcessesPanelRenderTest, FindHandlesListsTheProcessesHoldingAFile)
+{
+    auto panel = std::make_unique<ProcessesPanel>(
+        []
+        {
+            auto probe = std::make_unique<TestMocks::MockProcessProbe>();
+            probe->withProcess(TestMocks::makeProcessCounters(1, "init", 'S', 10, 5, 100, std::uint64_t{1} << 20U, 0))
+                .withProcess(TestMocks::makeProcessCounters(42, "soffice", 'S', 30, 10, 200, std::uint64_t{4} << 20U, 1));
+            auto files = std::make_unique<TestMocks::MockProcessOpenFilesReader>();
+            Platform::OpenFilesReadResult held;
+            held.status = Platform::OpenFilesReadStatus::Ok;
+            for (const char* path : {"/home/me/Report.ods", "/home/me/notes.txt"})
+            {
+                Platform::OpenFile open;
+                open.kind = Platform::OpenFileKind::File;
+                open.path = path;
+                held.files.push_back(std::move(open));
+            }
+            files->setResult(std::move(held));
+            return ProcessesPanelPlatform{.probe = std::move(probe),
+                                          .actions = std::make_unique<TestMocks::MockProcessActions>(),
+                                          .icons = nullptr,
+                                          .openFiles = std::move(files)};
+        });
+    attachAndSeed(*panel);
+    Core::ActiveTabChangedEvent shown("Processes");
+    panel->onEvent(shown);
+    renderUntilLoaded(*panel);
+
+    const ImGuiWindow* shell = ImGui::FindWindowByName("Shell");
+    ASSERT_NE(shell, nullptr);
+    // Ctrl+Shift+F over the table opens it, as the toolbar's magnifier button does.
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(DISPLAY_WIDTH * 0.5F, DISPLAY_HEIGHT * 0.5F); // hovered: the table's keys are armed
+    io.AddKeyEvent(ImGuiMod_Ctrl, true);
+    io.AddKeyEvent(ImGuiMod_Shift, true);
+    io.AddKeyEvent(ImGuiKey_F, true);
+    static_cast<void>(renderAndCapture(*panel));
+    io.AddKeyEvent(ImGuiKey_F, false);
+    io.AddKeyEvent(ImGuiMod_Shift, false);
+    io.AddKeyEvent(ImGuiMod_Ctrl, false);
+    static_cast<void>(renderAndCapture(*panel));
+    static_cast<void>(renderAndCapture(*panel));
+    ASSERT_NE(ImGui::GetTopMostPopupModal(), nullptr) << "Ctrl+Shift+F didn't open Find handles";
+    ASSERT_NE(shell, nullptr);
+    EXPECT_TRUE(renderAndCapture(*panel).contains("Type a name and press Find."));
+
+    // The query box has the keyboard when the dialog opens: type, then Enter searches.
+    for (const char* character : {"r", "e", "p", "o", "r", "t"})
+    {
+        ImGui::GetIO().AddInputCharactersUTF8(character);
+        static_cast<void>(renderAndCapture(*panel));
+    }
+    ImGui::GetIO().AddKeyEvent(ImGuiKey_Enter, true);
+    static_cast<void>(renderAndCapture(*panel));
+    ImGui::GetIO().AddKeyEvent(ImGuiKey_Enter, false);
+    std::string text;
+    for (int frame = 0; frame < LOAD_FRAMES; ++frame)
+    {
+        text = renderAndCapture(*panel);
+        if (text.contains("2 processes searched"))
+        {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    EXPECT_TRUE(text.contains("2 processes searched \xC2\xB7 2 found")) << text;
+    EXPECT_TRUE(text.contains("/home/me/Report.ods")) << text;
+    EXPECT_TRUE(text.contains("soffice")) << text;
+    EXPECT_FALSE(text.contains("notes.txt")) << text;
+    panel->onDetach();
+}
+
+// Ctrl+F over the table puts the cursor in the filter box: what's typed next filters the rows.
+TEST_F(ProcessesPanelRenderTest, CtrlFPutsTheCursorInTheFilter)
+{
+    SelectionSink events;
+    const auto panel = attachedPanel(events.sink());
+    renderUntilLoaded(*panel);
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(DISPLAY_WIDTH * 0.5F, DISPLAY_HEIGHT * 0.5F); // hovered: the table's keys are armed
+    io.AddKeyEvent(ImGuiMod_Ctrl, true);
+    io.AddKeyEvent(ImGuiKey_F, true);
+    static_cast<void>(renderAndCapture(*panel));
+    io.AddKeyEvent(ImGuiKey_F, false);
+    io.AddKeyEvent(ImGuiMod_Ctrl, false);
+    static_cast<void>(renderAndCapture(*panel));
+    static_cast<void>(renderAndCapture(*panel));
+    EXPECT_EQ(ImGui::GetTopMostPopupModal(), nullptr); // not Find handles
+    for (const char* character : {"w", "o", "r", "k"})
+    {
+        io.AddInputCharactersUTF8(character);
+        static_cast<void>(renderAndCapture(*panel));
+    }
+    static_cast<void>(renderAndCapture(*panel));
+    const std::string text = renderAndCapture(*panel);
+    EXPECT_TRUE(text.contains("worker")) << text;
+    EXPECT_FALSE(text.contains("server")) << text;
+}
+
 // #3186: the Group control picks a mode (leaving Tree view, which grouping replaces); the keyboard and
 // Ctrl+A walk the grouped rows; a header clicked twice collapses its group and opens it again.
 TEST_F(ProcessesPanelRenderTest, TheGroupControlLeavesTreeViewAndGroupedRowsNavigate)
